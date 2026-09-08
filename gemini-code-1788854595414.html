@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>分數比較大冒險 - 糖果 3D 旗艦版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --candy-pink: #ff85a2;
+      --candy-pink-dark: #e05275;
+      --candy-purple: #a855f7;
+      --candy-purple-dark: #7e22ce;
+      --candy-blue: #38bdf8;
+      --candy-blue-dark: #0284c7;
+      --candy-green: #34d399;
+      --candy-green-dark: #059669;
+      --candy-yellow: #facc15;
+      --candy-yellow-dark: #ca8a04;
+      --candy-orange: #fb923c;
+      --bg-gradient: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+    }
+
+    * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
+    
+    body {
+      font-family: 'Fredoka', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-gradient);
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 浮動背景裝飾球 */
+    .bg-bubble {
+      position: absolute; border-radius: 50%; opacity: 0.4; filter: blur(30px); z-index: -1;
+      animation: float 8s infinite ease-in-out alternate;
+    }
+    .bg-b1 { width: 300px; height: 300px; background: #f472b6; top: -50px; left: -50px; }
+    .bg-b2 { width: 350px; height: 350px; background: #38bdf8; bottom: -80px; right: -50px; animation-delay: -4s; }
+
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(30px) rotate(15deg); }
+    }
+
+    #game-container {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 4px solid rgba(255, 255, 255, 0.9);
+      border-radius: 36px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.12), inset 0 2px 4px rgba(255,255,255,0.8);
+      width: 100%; max-width: 920px;
+      padding: 32px;
+      display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+
+    /* 主選單 */
+    #menu-screen { text-align: center; width: 100%; padding: 20px 10px; }
+    #menu-screen h1 {
+      font-size: 46px; font-weight: 900;
+      background: linear-gradient(45deg, #ec4899, #8b5cf6, #3b82f6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px; filter: drop-shadow(2px 4px 0px rgba(255,255,255,0.8));
+    }
+    #menu-screen p { font-size: 20px; color: #64748b; font-weight: 700; margin-bottom: 36px; }
+    
+    .mode-cards { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .mode-btn {
+      background: #ffffff; border: 3px solid #f1f5f9; border-radius: 28px;
+      padding: 28px 24px; width: 280px; cursor: pointer;
+      box-shadow: 0 14px 0 #e2e8f0, 0 18px 30px rgba(0,0,0,0.08);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      position: relative; top: 0;
+    }
+    .mode-btn:hover { top: -6px; box-shadow: 0 20px 0 #e2e8f0, 0 24px 35px rgba(0,0,0,0.12); }
+    .mode-btn:active { top: 8px; box-shadow: 0 6px 0 #e2e8f0, 0 10px 15px rgba(0,0,0,0.08); }
+    .mode-icon { font-size: 56px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+    .mode-title { font-size: 24px; font-weight: 900; color: #1e293b; }
+    .mode-desc { font-size: 15px; color: #64748b; font-weight: 500; text-align: center; line-height: 1.5; }
+
+    /* 頂部狀態列 */
+    .header-bar {
+      display: flex; justify-content: space-between; width: 100%;
+      margin-bottom: 24px; font-weight: 700; color: #334155;
+      flex-wrap: wrap; gap: 10px; align-items: center;
+    }
+    .badge {
+      background: #ffffff; padding: 10px 18px; border-radius: 20px;
+      border: 2px solid #f1f5f9;
+      box-shadow: 0 6px 0 #e2e8f0; font-size: 16px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .level-indicator { color: #d97706; border-color: #fef3c7; }
+    .streak-badge { color: #e11d48; border-color: #ffe4e6; }
+    .btn-home {
+      background: #ffffff; border: 2px solid #e2e8f0; padding: 10px 18px; border-radius: 20px;
+      font-weight: 900; color: #64748b; cursor: pointer; box-shadow: 0 6px 0 #cbd5e1;
+      transition: all 0.15s;
+    }
+    .btn-home:active { transform: translateY(4px); box-shadow: 0 2px 0 #cbd5e1; }
+
+    /* 題目顯示區 */
+    .equation-container {
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      margin: 16px 0 24px 0; min-height: 140px; width: 100%; flex-wrap: wrap;
+    }
+    
+    /* 糖果分數卡片 */
+    .fraction-wrapper {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      padding: 12px 20px; border-radius: 24px;
+      border: 3px solid #e2e8f0;
+      box-shadow: 0 10px 0 #cbd5e1, 0 12px 20px rgba(0,0,0,0.06);
+      pointer-events: none;
+    }
+    .fraction-mixed { display: inline-flex; align-items: center; }
+    .number-whole { font-size: 42px; font-weight: 900; color: #0f172a; margin-right: 8px; line-height: 1; }
+    .integer-only { font-size: 42px; font-weight: 900; color: #0f172a; padding: 4px 12px; }
+    .fraction { display: inline-flex; flex-direction: column; align-items: center; font-size: 30px; font-weight: 900; color: #0f172a; }
+    .numerator { border-bottom: 4px solid #0f172a; padding-bottom: 2px; text-align: center; width: 100%; border-radius: 2px; }
+    .denominator { padding-top: 2px; text-align: center; width: 100%; }
+
+    .symbol-text { font-size: 46px; font-weight: 900; color: var(--candy-purple); margin: 0 6px; filter: drop-shadow(0 4px 0 #c084fc); }
+
+    /* 放置目標框 */
+    .drop-slot {
+      border: 3px dashed #cbd5e1; border-radius: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; background: rgba(255, 255, 255, 0.6);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; min-width: 80px; min-height: 80px;
+    }
+    .drop-slot.slot-symbol { width: 80px; height: 80px; font-size: 40px; color: var(--candy-purple); }
+    .drop-slot.slot-fraction { min-width: 120px; min-height: 100px; padding: 8px; }
+    
+    .drop-slot.active {
+      border-color: var(--candy-purple); background: #f3e8ff;
+      box-shadow: 0 0 0 5px rgba(168, 85, 247, 0.3); transform: scale(1.04);
+    }
+    .drop-slot.filled {
+      border-style: solid; border-color: var(--candy-blue); background: #e0f2fe;
+      box-shadow: 0 8px 0 #93c5fd;
+    }
+    .drop-slot.slot-highlight { border-color: var(--candy-green) !important; background: #d1fae5 !important; transform: scale(1.08); }
+
+    /* 卡片與按鈕操作區 */
+    .controls-area { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; margin-top: 10px; }
+    .cards-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 8px; }
+    
+    .symbol-card {
+      width: 84px; height: 84px;
+      background: linear-gradient(180deg, #c084fc 0%, var(--candy-purple) 100%);
+      color: white; border-radius: 24px; font-size: 44px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 0 var(--candy-purple-dark), 0 12px 20px rgba(168,85,247,0.3);
+      cursor: grab; touch-action: none; transition: transform 0.15s;
+    }
+    .fraction-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+      border: 3px solid #7dd3fc; border-radius: 24px;
+      padding: 10px 16px;
+      box-shadow: 0 10px 0 var(--candy-blue-dark), 0 12px 20px rgba(56,189,248,0.25);
+      cursor: grab; touch-action: none; display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    
+    .symbol-card:active, .fraction-card:active { cursor: grabbing; transform: scale(0.96); }
+    .fraction-card.used { opacity: 0.3; pointer-events: none; filter: grayscale(0.9); box-shadow: 0 4px 0 #94a3b8; }
+
+    .dragging-ghost {
+      position: fixed !important; z-index: 9999 !important; pointer-events: none !important;
+      opacity: 0.9; transform: scale(1.1) rotate(-3deg);
+      box-shadow: 0 20px 35px rgba(0,0,0,0.3) !important;
+    }
+
+    /* 3D 糖果按鈕 */
+    .btn {
+      background: linear-gradient(180deg, #6ee7b7 0%, var(--candy-green) 100%);
+      color: white; border: none; padding: 16px 50px;
+      font-size: 24px; font-weight: 900; border-radius: 28px;
+      box-shadow: 0 10px 0 var(--candy-green-dark), 0 15px 25px rgba(16,185,129,0.3);
+      cursor: pointer; transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      position: relative; top: 0;
+    }
+    .btn:hover { top: -3px; box-shadow: 0 13px 0 var(--candy-green-dark), 0 18px 28px rgba(16,185,129,0.35); }
+    .btn:active { top: 6px; box-shadow: 0 4px 0 var(--candy-green-dark), 0 8px 15px rgba(16,185,129,0.2); }
+
+    .feedback { font-size: 24px; font-weight: 900; min-height: 36px; text-align: center; }
+    .correct { color: #15803d; text-shadow: 0 2px 0 #bbf7d0; }
+    .wrong { color: #b91c1c; text-shadow: 0 2px 0 #fecdd3; }
+
+    /* 提示欄位 */
+    .hint-box {
+      display: none;
+      background: linear-gradient(180deg, #fffde7 0%, #fef9c3 100%);
+      border: 3px solid var(--candy-yellow); border-radius: 24px;
+      padding: 16px 24px; margin-top: 8px; width: 100%; max-width: 680px;
+      color: #854d0e; font-size: 17px; font-weight: 700; text-align: left; line-height: 1.6;
+      box-shadow: 0 8px 0 var(--candy-yellow-dark), 0 10px 20px rgba(234,179,8,0.15);
+    }
+
+    #quiz-screen, #result-screen { display: none; width: 100%; }
+    #result-screen { text-align: center; }
+    .final-score {
+      font-size: 72px; font-weight: 900;
+      background: linear-gradient(45deg, #3b82f6, #ec4899);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin: 16px 0; filter: drop-shadow(0 4px 0 rgba(255,255,255,1));
+    }
+
+    /* 動畫特效 */
+    .shake { animation: shake 0.5s ease-in-out; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+
+    .bounce { animation: bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes bounce {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-bubble bg-b1"></div>
+<div class="bg-bubble bg-b2"></div>
+
+<div id="game-container">
+  <!-- 主選單 -->
+  <div id="menu-screen">
+    <h1>🍬 分數比較大冒險</h1>
+    <p>全關 15 題糖果階梯關卡，挑戰你的分數直覺！</p>
+    <div class="mode-cards">
+      <div class="mode-btn" onclick="startGame('symbol')">
+        <div class="mode-icon">✍️</div>
+        <div class="mode-title">填寫符號模式</div>
+        <div class="mode-desc">觀察分數大小，拖入 <b>&gt;</b>、<b>&lt;</b> 或 <b>=</b> 符號。</div>
+      </div>
+      <div class="mode-btn" onclick="startGame('arrange')">
+        <div class="mode-icon">🧩</div>
+        <div class="mode-title">分數排序模式</div>
+        <div class="mode-desc">根據給定的大小關係，將分數卡片放至正確位置。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 遊戲測驗區 -->
+  <div id="quiz-screen">
+    <div class="header-bar">
+      <button class="btn-home" onclick="showMenu()">🏠 主選單</button>
+      <div class="badge">關卡：<span id="q-num">1</span>/15</div>
+      <div class="badge level-indicator" id="level-text">難度 1</div>
+      <div class="badge streak-badge">連對：<span id="streak-num">0</span> 🔥</div>
+      <div class="badge">得分：<span id="score-num">0</span></div>
+    </div>
+
+    <div class="equation-container" id="equation"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="hint-box" id="hint-box"></div>
+
+    <div class="controls-area">
+      <p style="color: #64748b; font-size: 16px; font-weight: 700; margin: 0;" id="instruction-text"></p>
+      <div class="cards-container" id="cards-container"></div>
+      <button class="btn" id="submit-btn" onclick="checkAnswer()">確認答案</button>
+    </div>
+  </div>
+
+  <!-- 結算畫面 -->
+  <div id="result-screen">
+    <h2 style="font-size: 40px; font-weight: 900; color: #1e293b; margin: 0;">🎉 冒險完成！</h2>
+    <div class="final-score" id="final-score">0 分</div>
+    <p id="result-desc" style="font-size: 20px; color: #475569; font-weight: 700;"></p>
+    <button class="btn" onclick="showMenu()" style="margin-top: 24px;">回到主選單</button>
+  </div>
+</div>
+
+<script>
+  let gameMode = 'symbol';
+  let currentQ = 1;
+  let score = 0;
+  let streak = 0;
+  let currentQuestionData = {};
+  let selectedSlotIndex = 0;
+  let ghostEl = null;
+
+  let usedIndicesByLevel = { 1: [], 2: [], 3: [] };
+
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+  function lcm(a, b) { return (a * b) / gcd(a, b); }
+
+  function showMenu() {
+    document.getElementById('menu-screen').style.display = 'block';
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'none';
+  }
+
+  function startGame(mode) {
+    gameMode = mode;
+    currentQ = 1; score = 0; streak = 0;
+    usedIndicesByLevel = { 1: [], 2: [], 3: [] };
+    document.getElementById('menu-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    document.getElementById('result-screen').style.display = 'none';
+    renderQuestion();
+  }
+
+  function compareFractions(f1, f2) {
+    const v1 = f1.type === 'integer' ? f1.whole : (f1.whole || 0) + f1.num / f1.den;
+    const v2 = f2.type === 'integer' ? f2.whole : (f2.whole || 0) + f2.num / f2.den;
+    if (Math.abs(v1 - v2) < 0.00001) return '=';
+    return v1 > v2 ? '>' : '<';
+  }
+
+  /* 題庫資料 (所有分子與分母均 > 0) */
+  const QUESTION_POOLS = {
+    1: [
+      [ { whole: 0, num: 1, den: 6 }, { whole: 0, num: 3, den: 4 } ],
+      [ { whole: 0, num: 1, den: 4 }, { whole: 0, num: 3, den: 4 } ],
+      [ { whole: 0, num: 2, den: 7 }, { whole: 0, num: 5, den: 8 } ],
+      [ { whole: 0, num: 4, den: 5 }, { whole: 0, num: 2, den: 5 } ],
+      [ { whole: 0, num: 1, den: 3 }, { whole: 0, num: 5, den: 6 } ],
+      [ { whole: 0, num: 2, den: 9 }, { whole: 0, num: 4, den: 5 } ],
+      [ { whole: 0, num: 3, den: 8 }, { whole: 0, num: 7, den: 10 } ],
+      [ { whole: 0, num: 1, den: 5 }, { whole: 0, num: 3, den: 5 } ],
+      [ { whole: 0, num: 3, den: 10 }, { whole: 0, num: 2, den: 3 } ],
+      [ { whole: 0, num: 2, den: 11 }, { whole: 0, num: 6, den: 7 } ]
+    ],
+    2: [
+      [ { whole: 0, num: 2, den: 3 }, { whole: 0, num: 3, den: 4 } ],
+      [ { whole: 0, num: 6, den: 7 }, { whole: 0, num: 18, den: 23 } ],
+      [ { whole: 2, num: 4, den: 9 }, { whole: 2, num: 5, den: 6 } ],
+      [ { whole: 1, num: 9, den: 10 }, { whole: 0, num: 19, den: 8, type: 'improper' } ],
+      [ { whole: 5, num: 3, den: 8 }, { whole: 0, num: 21, den: 4, type: 'improper' } ],
+      [ { whole: 0, num: 3, den: 5 }, { whole: 0, num: 5, den: 8 } ],
+      [ { whole: 1, num: 2, den: 3 }, { whole: 0, num: 7, den: 4, type: 'improper' } ],
+      [ { whole: 3, num: 1, den: 2 }, { whole: 3, num: 2, den: 5 } ],
+      [ { whole: 0, num: 5, den: 6 }, { whole: 0, num: 7, den: 9 } ],
+      [ { whole: 2, num: 1, den: 3 }, { whole: 0, num: 9, den: 4, type: 'improper' } ]
+    ],
+    3: [
+      [ { whole: 0, num: 2, den: 3 }, { whole: 0, num: 5, den: 7 }, { whole: 0, num: 4, den: 7 } ],
+      [ { whole: 2, num: 1, den: 1, type: 'integer' }, { whole: 0, num: 25, den: 12, type: 'improper' }, { whole: 0, num: 2, den: 3 } ],
+      [ { whole: 1, num: 3, den: 8 }, { whole: 0, num: 19, den: 12, type: 'improper' }, { whole: 0, num: 13, den: 8, type: 'improper' } ],
+      [ { whole: 0, num: 5, den: 12 }, { whole: 0, num: 11, den: 12 }, { whole: 0, num: 7, den: 10 } ],
+      [ { whole: 4, num: 5, den: 8 }, { whole: 0, num: 6, den: 7 }, { whole: 0, num: 21, den: 5, type: 'improper' } ],
+      [ { whole: 1, num: 5, den: 8 }, { whole: 1, num: 7, den: 9 }, { whole: 1, num: 3, den: 8 } ],
+      [ { whole: 3, num: 1, den: 1, type: 'integer' }, { whole: 2, num: 7, den: 8 }, { whole: 0, num: 11, den: 4, type: 'improper' } ],
+      [ { whole: 0, num: 1, den: 2 }, { whole: 0, num: 2, den: 5 }, { whole: 0, num: 3, den: 4 } ],
+      [ { whole: 1, num: 1, den: 4 }, { whole: 0, num: 4, den: 3, type: 'improper' }, { whole: 1, num: 1, den: 6 } ],
+      [ { whole: 0, num: 7, den: 8 }, { whole: 4, num: 1, den: 7 }, { whole: 0, num: 25, den: 6, type: 'improper' } ]
+    ]
+  };
+
+  function generateQuestion(qNum) {
+    let level = 1;
+    if (qNum >= 6 && qNum <= 10) level = 2;
+    if (qNum >= 11) level = 3;
+
+    let pool = QUESTION_POOLS[level];
+    let usedIndices = usedIndicesByLevel[level];
+
+    let availableIndices = [];
+    for (let i = 0; i < pool.length; i++) {
+      if (!usedIndices.includes(i)) availableIndices.push(i);
+    }
+
+    if (availableIndices.length === 0) {
+      usedIndices = [];
+      usedIndicesByLevel[level] = [];
+      for (let i = 0; i < pool.length; i++) availableIndices.push(i);
+    }
+
+    let chosenIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    usedIndicesByLevel[level].push(chosenIndex);
+
+    let selectedFractions = JSON.parse(JSON.stringify(pool[chosenIndex]));
+    let data = { level: level, fractions: selectedFractions, symbols: [] };
+
+    for (let i = 0; i < data.fractions.length - 1; i++) {
+      data.symbols.push(compareFractions(data.fractions[i], data.fractions[i+1]));
+    }
+
+    if (gameMode === 'arrange') {
+      data.correctFractions = [...data.fractions];
+      data.optionsFractions = [...data.fractions].sort(() => Math.random() - 0.5);
+    }
+
+    return data;
+  }
+
+  function renderFractionHtml(f) {
+    if (f.type === 'integer' || (f.num === 0 && f.whole)) {
+      return `<div class="fraction-wrapper"><span class="integer-only">${f.whole}</span></div>`;
+    }
+    if (f.whole && f.whole > 0) {
+      return `
+        <div class="fraction-wrapper">
+          <div class="fraction-mixed">
+            <span class="number-whole">${f.whole}</span>
+            <div class="fraction">
+              <div class="numerator">${f.num}</div>
+              <div class="denominator">${f.den}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="fraction-wrapper">
+          <div class="fraction">
+            <div class="numerator">${f.num}</div>
+            <div class="denominator">${f.den}</div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function renderQuestion() {
+    currentQuestionData = generateQuestion(currentQ);
+    
+    document.getElementById('q-num').innerText = currentQ;
+    document.getElementById('score-num').innerText = score;
+    document.getElementById('streak-num').innerText = streak;
+    document.getElementById('feedback').innerText = '';
+    const hintBox = document.getElementById('hint-box');
+    hintBox.style.display = 'none';
+    hintBox.innerHTML = '';
+
+    const lvlText = document.getElementById('level-text');
+    if (currentQuestionData.level === 1) lvlText.innerText = "難度 1：1/2 基準比對";
+    else if (currentQuestionData.level === 2) lvlText.innerText = "難度 2：兩異分母比較";
+    else lvlText.innerText = "🔥 難度 3：三數綜合排序";
+
+    const eqContainer = document.getElementById('equation');
+    const cardsContainer = document.getElementById('cards-container');
+    const instructionText = document.getElementById('instruction-text');
+    eqContainer.innerHTML = '';
+    cardsContainer.innerHTML = '';
+
+    if (gameMode === 'symbol') {
+      instructionText.innerText = "拖動符號至目標框，或點擊目標框再選擇符號：";
+      
+      currentQuestionData.fractions.forEach((f, idx) => {
+        eqContainer.insertAdjacentHTML('beforeend', renderFractionHtml(f));
+        if (idx < currentQuestionData.fractions.length - 1) {
+          let slotHtml = `<div class="drop-slot slot-symbol ${idx === 0 ? 'active' : ''}" data-slot="${idx}">?</div>`;
+          eqContainer.insertAdjacentHTML('beforeend', slotHtml);
+        }
+      });
+
+      cardsContainer.innerHTML = `
+        <div class="symbol-card" data-sym=">">&gt;</div>
+        <div class="symbol-card" data-sym="<">&lt;</div>
+        <div class="symbol-card" data-sym="=">=</div>
+      `;
+    } else {
+      instructionText.innerText = "拖動分數卡片至目標框（點擊已填卡片可清除）：";
+
+      currentQuestionData.fractions.forEach((_, idx) => {
+        let slotHtml = `<div class="drop-slot slot-fraction ${idx === 0 ? 'active' : ''}" data-slot="${idx}">拖入 / 點擊</div>`;
+        eqContainer.insertAdjacentHTML('beforeend', slotHtml);
+
+        if (idx < currentQuestionData.symbols.length) {
+          let symHtml = `<div class="symbol-text">${currentQuestionData.symbols[idx]}</div>`;
+          eqContainer.insertAdjacentHTML('beforeend', symHtml);
+        }
+      });
+
+      currentQuestionData.optionsFractions.forEach((f, idx) => {
+        let cardHtml = `
+          <div class="fraction-card" data-fidx="${idx}">
+            ${renderFractionHtml(f)}
+          </div>
+        `;
+        cardsContainer.insertAdjacentHTML('beforeend', cardHtml);
+      });
+    }
+
+    selectedSlotIndex = 0;
+    bindEvents();
+  }
+
+  function bindEvents() {
+    const slots = document.querySelectorAll('.drop-slot');
+    slots.forEach(slot => {
+      slot.addEventListener('click', () => {
+        if (gameMode === 'arrange' && slot.classList.contains('filled')) {
+          clearSlot(slot);
+        }
+        slots.forEach(s => s.classList.remove('active'));
+        slot.classList.add('active');
+        selectedSlotIndex = parseInt(slot.dataset.slot);
+      });
+    });
+
+    const cards = document.querySelectorAll('.symbol-card, .fraction-card');
+    cards.forEach(card => {
+      card.addEventListener('pointerdown', handlePointerDown);
+    });
+  }
+
+  function handlePointerDown(e) {
+    if (e.button && e.button !== 0) return;
+    const card = e.currentTarget;
+    if (card.classList.contains('used')) return;
+
+    const startX = e.clientX, startY = e.clientY;
+    let isDragging = false;
+
+    const onPointerMove = (ev) => {
+      const dx = ev.clientX - startX, dy = ev.clientY - startY;
+      if (!isDragging && (dx * dx + dy * dy) > 36) {
+        isDragging = true;
+        ghostEl = card.cloneNode(true);
+        ghostEl.classList.add('dragging-ghost');
+        const rect = card.getBoundingClientRect();
+        ghostEl.style.width = rect.width + 'px';
+        ghostEl.style.height = rect.height + 'px';
+        ghostEl.style.left = (ev.clientX - rect.width / 2) + 'px';
+        ghostEl.style.top = (ev.clientY - rect.height / 2) + 'px';
+        document.body.appendChild(ghostEl);
+      }
+
+      if (isDragging && ghostEl) {
+        ghostEl.style.left = (ev.clientX - ghostEl.offsetWidth / 2) + 'px';
+        ghostEl.style.top = (ev.clientY - ghostEl.offsetHeight / 2) + 'px';
+        clearSlotHighlights();
+        const dropTarget = document.elementFromPoint(ev.clientX, ev.clientY);
+        const targetSlot = dropTarget?.closest('.drop-slot');
+        if (targetSlot) targetSlot.classList.add('slot-highlight');
+      }
+    };
+
+    const onPointerUp = (ev) => {
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
+
+      if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+
+      if (isDragging) {
+        dropCardAt(ev.clientX, ev.clientY, card);
+        clearSlotHighlights();
+      } else {
+        if (gameMode === 'symbol') fillSymbolSlot(card.dataset.sym);
+        else fillFractionSlot(card);
+      }
+    };
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  }
+
+  function clearSlotHighlights() {
+    document.querySelectorAll('.slot-highlight').forEach(s => s.classList.remove('slot-highlight'));
+  }
+
+  function dropCardAt(x, y, cardEl) {
+    const dropTarget = document.elementFromPoint(x, y);
+    const targetSlot = dropTarget?.closest('.drop-slot');
+    if (targetSlot) {
+      selectedSlotIndex = parseInt(targetSlot.dataset.slot);
+      document.querySelectorAll('.drop-slot').forEach(s => s.classList.remove('active'));
+      targetSlot.classList.add('active');
+
+      if (gameMode === 'symbol') fillSymbolSlot(cardEl.dataset.sym);
+      else fillFractionSlot(cardEl);
+    }
+  }
+
+  function fillSymbolSlot(sym) {
+    const slots = document.querySelectorAll('.drop-slot');
+    let activeSlot = document.querySelector(`.drop-slot[data-slot="${selectedSlotIndex}"]`);
+    if (activeSlot) {
+      activeSlot.innerText = sym;
+      activeSlot.classList.add('filled');
+      if (selectedSlotIndex < slots.length - 1) {
+        selectedSlotIndex++;
+        slots.forEach(s => s.classList.remove('active'));
+        slots[selectedSlotIndex].classList.add('active');
+      }
+    }
+  }
+
+  function fillFractionSlot(cardEl) {
+    const slots = document.querySelectorAll('.drop-slot');
+    let activeSlot = document.querySelector(`.drop-slot[data-slot="${selectedSlotIndex}"]`);
+    if (activeSlot) {
+      if (activeSlot.dataset.selectedFidx !== undefined) clearSlot(activeSlot);
+
+      const fIdx = cardEl.dataset.fidx;
+      const fData = currentQuestionData.optionsFractions[fIdx];
+      
+      activeSlot.innerHTML = renderFractionHtml(fData);
+      activeSlot.dataset.selectedFidx = fIdx;
+      activeSlot.classList.add('filled');
+      cardEl.classList.add('used');
+
+      if (selectedSlotIndex < slots.length - 1) {
+        selectedSlotIndex++;
+        slots.forEach(s => s.classList.remove('active'));
+        slots[selectedSlotIndex].classList.add('active');
+      }
+    }
+  }
+
+  function clearSlot(slotEl) {
+    const prevFidx = slotEl.dataset.selectedFidx;
+    if (prevFidx !== undefined) {
+      const prevCard = document.querySelector(`.fraction-card[data-fidx="${prevFidx}"]`);
+      if (prevCard) prevCard.classList.remove('used');
+      delete slotEl.dataset.selectedFidx;
+    }
+    slotEl.classList.remove('filled');
+    slotEl.innerHTML = '拖入 / 點擊';
+  }
+
+  function generateHintHtml(data) {
+    if (data.level === 1) {
+      return `💡 <b>解題小提示：</b><br>這類題目可以拿 <b>1/2</b> 作為基準快速判斷！<br>分子不到分母一半的小於 1/2，超過一半的大於 1/2。`;
+    } else if (data.level === 2) {
+      let f1 = data.fractions[0];
+      let f2 = data.fractions[1];
+      
+      if (f1.den && f2.den) {
+        let l = lcm(f1.den, f2.den);
+        return `💡 <b>解題小提示：</b><br>
+          1. 分母 <b>${f1.den}</b> 與 <b>${f2.den}</b> 的最小公倍數 (LCM) 是 <b>${l}</b>。<br>
+          2. 請將兩分數通分為分母為 <b>${l}</b> 的分數，再比較分子大小！`;
+      }
+      return `💡 <b>解題小提示：</b>先將假分數化為帶分數，再尋找分母公倍數進行通分！`;
+    } else {
+      let dens = data.fractions.filter(f => f.den).map(f => f.den);
+      if (dens.length >= 2) {
+        let l = dens.reduce((acc, val) => lcm(acc, val));
+        return `💡 <b>解題小提示：</b><br>
+          1. 先比較整數部分（假分數先化為帶分數）。<br>
+          2. 若整數相同，分母 LCM 為 <b>${l}</b>，將分數通分後進行排序！`;
+      }
+      return `💡 <b>解題小提示：</b>先比較整數部分，再將剩餘分數通分後比較！`;
+    }
+  }
+
+  function checkAnswer() {
+    const slots = document.querySelectorAll('.drop-slot');
+    let isCorrect = true;
+    let allFilled = true;
+
+    if (gameMode === 'symbol') {
+      let userAns = [];
+      slots.forEach(slot => {
+        if (slot.innerText === '?' || !slot.innerText) allFilled = false;
+        userAns.push(slot.innerText);
+      });
+      if (!allFilled) { showFeedback('請先填寫所有符號！'); triggerShake(); return; }
+      isCorrect = userAns.every((val, idx) => val === currentQuestionData.symbols[idx]);
+    } else {
+      let userFractions = [];
+      slots.forEach(slot => {
+        if (slot.dataset.selectedFidx === undefined) allFilled = false;
+        else userFractions.push(currentQuestionData.optionsFractions[slot.dataset.selectedFidx]);
+      });
+      if (!allFilled) { showFeedback('請先將所有卡片放好！'); triggerShake(); return; }
+      for (let i = 0; i < currentQuestionData.symbols.length; i++) {
+        let sym = currentQuestionData.symbols[i];
+        let res = compareFractions(userFractions[i], userFractions[i+1]);
+        if (res !== sym) { isCorrect = false; break; }
+      }
+    }
+
+    const fb = document.getElementById('feedback');
+    const hintBox = document.getElementById('hint-box');
+
+    if (isCorrect) {
+      streak++;
+      let gainedScore = 20 + (streak > 1 ? (streak - 1) * 5 : 0);
+      score += gainedScore;
+      fb.className = 'feedback correct bounce';
+      fb.innerText = `🎉 答對了！+${gainedScore} 分 ${streak > 1 ? '🔥 連對加分！' : ''}`;
+      hintBox.style.display = 'none';
+
+      document.getElementById('submit-btn').disabled = true;
+
+      setTimeout(() => {
+        document.getElementById('submit-btn').disabled = false;
+        currentQ++;
+        if (currentQ <= 15) renderQuestion();
+        else showResults();
+      }, 1500);
+
+    } else {
+      streak = 0;
+      document.getElementById('streak-num').innerText = streak;
+      fb.className = 'feedback wrong';
+      fb.innerText = `答案不太對喔！請參考下方提示修正後再試一次：`;
+      
+      triggerShake();
+      hintBox.innerHTML = generateHintHtml(currentQuestionData);
+      hintBox.style.display = 'block';
+    }
+  }
+
+  function triggerShake() {
+    const container = document.getElementById('equation');
+    container.classList.remove('shake');
+    void container.offsetWidth; // 觸發重繪
+    container.classList.add('shake');
+  }
+
+  function showFeedback(msg) {
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback wrong';
+    fb.innerText = msg;
+  }
+
+  function showResults() {
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    document.getElementById('final-score').innerText = score + ' 分';
+
+    let desc = "太棒了！你順利完成了全套 15 題糖果分數大冒險！";
+    if (score >= 350) desc = "🏆 簡直是分數比較大師！邏輯與概念太出色了！";
+    else if (score < 200) desc = "做得好！多注意小提示裡的 LCM 通分技巧，下次成績會更棒！";
+    document.getElementById('result-desc').innerText = desc;
+  }
+
+  showMenu();
+</script>
+</body>
+</html>
